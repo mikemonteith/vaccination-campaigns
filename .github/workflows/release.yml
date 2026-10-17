@@ -1,0 +1,54 @@
+# Runs when a release is published on GitHub. Builds the data files for the
+# release's tag, attaches them to the release and adds the change summary to
+# the release notes. The Deploy workflow then publishes them on the site.
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Validate data (strict)
+        run: npm run validate
+
+      - name: Build data files
+        run: npm run build:data -- --version "$TAG"
+
+      - name: Attach files to the release
+        run: |
+          cd dist/data
+          zip -r "../campaign-data-$TAG.zip" .
+          gh release upload "$TAG" *.json "../campaign-data-$TAG.zip" --clobber
+
+      - name: Add change summary to the release notes
+        run: |
+          previous=$(git tag --list 'v*' --sort=-v:refname | grep -vxF "$TAG" | head -n 1 || true)
+          if [ -n "$previous" ]; then
+            git worktree add .previous "$previous"
+            npm run -s diff -- --base .previous/data --title "Changes since $previous" > summary.md
+          else
+            echo "## First release" > summary.md
+          fi
+          gh release view "$TAG" --json body --jq .body > notes.md
+          printf '\n\n' >> notes.md
+          cat summary.md >> notes.md
+          gh release edit "$TAG" --notes-file notes.md

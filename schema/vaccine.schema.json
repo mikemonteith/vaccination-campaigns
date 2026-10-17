@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vaccine.schema.json",
+  "title": "Vaccine",
+  "description": "A vaccine product that can be offered in a campaign. The entry ID is the file name.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "snomedCode"],
+  "properties": {
+    "name": {
+      "title": "Name",
+      "type": "string",
+      "minLength": 1
+    },
+    "manufacturer": {
+      "title": "Manufacturer",
+      "type": "string"
+    },
+    "snomedCode": {
+      "title": "SNOMED CT code",
+      "description": "SNOMED CT concept ID for the vaccine product.",
+      "type": "string",
+      "pattern": "^[0-9]{6,18}$"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    }
+  }
+}

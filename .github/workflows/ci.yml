@@ -1,0 +1,115 @@
+# Runs on every pull request.
+#
+# - Into staging (editor changes from the CMS): data checks are lenient,
+#   because drafts may be incomplete.
+# - Into main (releases): data checks are strict.
+#
+# Either way, it posts a plain-English summary of the data changes on the
+# pull request.
+name: CI
+
+on:
+  pull_request:
+    branches: [main, staging]
+  push:
+    branches: [staging]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Format
+        run: npm run lint
+      - name: Types
+        run: npm run typecheck
+      - name: Tests
+        run: npm test
+      - name: CMS config matches schemas
+        run: npm run check:cms
+
+      - name: Validate data
+        run: |
+          if [ "${{ github.base_ref }}" = "main" ]; then
+            npm run validate
+          else
+            npm run validate:lenient
+          fi
+
+      - name: Build
+        run: npm run build
+
+  summary:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: .base
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Describe changes
+        run: |
+          if [ "${{ github.base_ref }}" = "main" ]; then
+            title="Changes in this release"
+          else
+            title="Changes in this pull request"
+          fi
+          npm run -s diff -- --base .base/data --title "$title" > summary.md
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on the pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("node:fs");
+            const marker = "<!-- campaign-data-summary -->";
+            const preview = `https://${context.repo.owner.toLowerCase()}.github.io/${context.repo.repo}/staging/`;
+            const body = [
+              marker,
+              fs.readFileSync("summary.md", "utf8"),
+              context.payload.pull_request.base.ref === "main"
+                ? `Preview the release on the [staging site](${preview}).`
+                : `Once accepted, this will appear on the [staging site](${preview}).`,
+            ].join("\n\n");
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+            const existing = comments.find((c) => c.body?.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

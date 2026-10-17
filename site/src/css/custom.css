@@ -1,0 +1,20 @@
+/* NHS blue for the primary colour; everything else is Docusaurus defaults. */
+:root {
+  --ifm-color-primary: #005eb8;
+  --ifm-color-primary-dark: #0055a6;
+  --ifm-color-primary-darker: #00509c;
+  --ifm-color-primary-darkest: #004281;
+  --ifm-color-primary-light: #0067ca;
+  --ifm-color-primary-lighter: #006cd4;
+  --ifm-color-primary-lightest: #007aef;
+}
+
+[data-theme="dark"] {
+  --ifm-color-primary: #41b6e6;
+  --ifm-color-primary-dark: #29ade3;
+  --ifm-color-primary-darker: #1ea8e0;
+  --ifm-color-primary-darkest: #1a8dbc;
+  --ifm-color-primary-light: #59bfe9;
+  --ifm-color-primary-lighter: #65c4eb;
+  --ifm-color-primary-lightest: #89d2f0;
+}

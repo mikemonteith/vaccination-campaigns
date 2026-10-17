@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "campaign.schema.json",
+  "title": "Campaign",
+  "description": "A vaccination campaign. The entry ID is the file name. Linked vaccines, cohorts and organisation types are referenced by their IDs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "programme",
+    "status",
+    "startDate",
+    "endDate",
+    "vaccines",
+    "cohorts",
+    "orgTypes"
+  ],
+  "properties": {
+    "name": {
+      "title": "Name",
+      "type": "string",
+      "minLength": 1
+    },
+    "programme": {
+      "title": "Programme",
+      "type": "string",
+      "enum": ["covid-19", "flu", "rsv", "other"]
+    },
+    "status": {
+      "title": "Status",
+      "type": "string",
+      "enum": ["planned", "active", "closed"]
+    },
+    "startDate": {
+      "title": "Start date",
+      "type": "string",
+      "format": "date"
+    },
+    "endDate": {
+      "title": "End date",
+      "type": "string",
+      "format": "date"
+    },
+    "summary": {
+      "title": "Summary",
+      "description": "Plain-English description of the campaign (Markdown).",
+      "type": "string"
+    },
+    "vaccines": {
+      "title": "Vaccines",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string" },
+      "x-references": "vaccines"
+    },
+    "cohorts": {
+      "title": "Eligible cohorts",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string" },
+      "x-references": "cohorts"
+    },
+    "orgTypes": {
+      "title": "Participating organisation types",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string" },
+      "x-references": "org-types"
+    },
+    "sources": {
+      "title": "Source documents",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "url"],
+        "properties": {
+          "title": { "title": "Title", "type": "string", "minLength": 1 },
+          "url": { "title": "URL", "type": "string", "format": "uri" }
+        }
+      }
+    }
+  }
+}

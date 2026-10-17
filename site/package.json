@@ -1,0 +1,4 @@
+{
+  "//": "Stops the root package's \"type\": \"module\" applying here. Docusaurus's generated files mix import and require, which webpack only allows in its default mode.",
+  "private": true
+}

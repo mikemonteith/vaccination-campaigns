@@ -1,0 +1,48 @@
+{
+  "name": "vaccination-campaign-data",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Source data, schemas and published documentation for NHS vaccination campaigns.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "validate": "tsx scripts/validate.ts",
+    "validate:lenient": "tsx scripts/validate.ts --lenient",
+    "check:cms": "tsx scripts/check-cms-config.ts",
+    "build:data": "tsx scripts/build-data.ts",
+    "diff": "tsx scripts/diff.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p site",
+    "lint": "prettier --check .",
+    "format": "prettier --write .",
+    "site:start": "npm run build:data && docusaurus start site",
+    "site:build": "docusaurus build site --out-dir ../build",
+    "build": "npm run build:data && npm run site:build"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.10.2",
+    "@docusaurus/preset-classic": "3.10.2",
+    "@mdx-js/react": "^3.1.0",
+    "clsx": "^2.1.1",
+    "marked": "^15.0.0",
+    "prism-react-renderer": "^2.4.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.10.2",
+    "@docusaurus/tsconfig": "3.10.2",
+    "@docusaurus/types": "3.10.2",
+    "@sveltia/cms": "0.246.1",
+    "@types/node": "^22.15.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "prettier": "^3.5.3",
+    "tsx": "^4.20.0",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.0",
+    "yaml": "^2.8.0"
+  }
+}

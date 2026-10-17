@@ -1,0 +1,14 @@
+name: Example autumn 2026 flu campaign
+programme: flu
+status: planned
+startDate: "2026-09-01"
+endDate: "2027-03-31"
+summary: |
+  **Example campaign.** This entry shows the shape of the data and is not real.
+vaccines:
+  - example-flu-vaccine
+cohorts:
+  - aged-75-and-over
+orgTypes:
+  - community-pharmacy
+  - gp-practice

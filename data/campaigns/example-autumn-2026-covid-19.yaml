@@ -1,0 +1,18 @@
+name: Example autumn 2026 COVID-19 campaign
+programme: covid-19
+status: planned
+startDate: "2026-10-01"
+endDate: "2027-01-31"
+summary: |
+  **Example campaign.** This entry shows the shape of the data and is not real.
+vaccines:
+  - example-covid-vaccine
+cohorts:
+  - aged-75-and-over
+  - care-home-residents
+orgTypes:
+  - community-pharmacy
+  - gp-practice
+sources:
+  - title: Example specification
+    url: https://example.org/spec

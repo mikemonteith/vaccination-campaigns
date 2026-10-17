@@ -1,0 +1,158 @@
+# Sveltia CMS configuration: the editing forms for the data in /data.
+#
+# The JSON Schemas in /schema are the contract. Every collection and field
+# here must match its schema (names, required fields, select options, links);
+# `npm run check:cms` enforces that in CI, so change the schema first.
+#
+# Replace OWNER/REPO and the authenticator URL before first use. See
+# site/docs/maintainers/setup.md.
+
+backend:
+  name: github
+  repo: OWNER/REPO
+  # Editors' approved changes merge into staging. Releases go staging -> main
+  # through a reviewed pull request.
+  branch: staging
+  # Sveltia CMS Authenticator (Cloudflare Worker) for GitHub sign-in.
+  base_url: https://sveltia-cms-auth.EXAMPLE.workers.dev
+  squash_merges: true
+
+# Each new or edited entry becomes a pull request into staging, shown to
+# editors as a Draft -> In Review -> Ready board.
+publish_mode: editorial_workflow
+
+media_folder: site/static/uploads
+public_folder: /uploads
+
+site_url: https://OWNER.github.io/REPO/staging/
+
+collections:
+  - name: campaigns
+    label: Campaigns
+    label_singular: Campaign
+    folder: data/campaigns
+    extension: yaml
+    format: yaml
+    create: true
+    identifier_field: name
+    summary: "{{name}} ({{status}})"
+    sortable_fields: [name, startDate]
+    fields:
+      - { name: name, label: Name, widget: string }
+      - name: programme
+        label: Programme
+        widget: select
+        options:
+          - { label: COVID-19, value: covid-19 }
+          - { label: Flu, value: flu }
+          - { label: RSV, value: rsv }
+          - { label: Other, value: other }
+      - name: status
+        label: Status
+        widget: select
+        options:
+          - { label: Planned, value: planned }
+          - { label: Active, value: active }
+          - { label: Closed, value: closed }
+      - { name: startDate, label: Start date, widget: datetime, type: date }
+      - { name: endDate, label: End date, widget: datetime, type: date }
+      - name: summary
+        label: Summary
+        widget: markdown
+        required: false
+        hint: A plain-English description of the campaign.
+      - name: vaccines
+        label: Vaccines
+        widget: relation
+        collection: vaccines
+        multiple: true
+        min: 1
+        display_fields: [name]
+        search_fields: [name]
+      - name: cohorts
+        label: Eligible cohorts
+        widget: relation
+        collection: cohorts
+        multiple: true
+        min: 1
+        display_fields: [name]
+        search_fields: [name]
+      - name: orgTypes
+        label: Participating organisation types
+        widget: relation
+        collection: org-types
+        multiple: true
+        min: 1
+        display_fields: [name]
+        search_fields: [name]
+      - name: sources
+        label: Source documents
+        label_singular: Source document
+        widget: list
+        required: false
+        hint: Specifications, letters or emails this campaign is based on.
+        fields:
+          - { name: title, label: Title, widget: string }
+          - { name: url, label: URL, widget: string, type: url }
+
+  - name: vaccines
+    label: Vaccines
+    label_singular: Vaccine
+    folder: data/vaccines
+    extension: yaml
+    format: yaml
+    create: true
+    identifier_field: name
+    fields:
+      - { name: name, label: Name, widget: string }
+      - {
+          name: manufacturer,
+          label: Manufacturer,
+          widget: string,
+          required: false,
+        }
+      - name: snomedCode
+        label: SNOMED CT code
+        widget: string
+        hint: The SNOMED CT concept ID for the vaccine product (digits only).
+        pattern: ["^[0-9]{6,18}$", "Must be 6 to 18 digits"]
+      - { name: description, label: Description, widget: text, required: false }
+
+  - name: cohorts
+    label: Cohorts
+    label_singular: Cohort
+    folder: data/cohorts
+    extension: yaml
+    format: yaml
+    create: true
+    identifier_field: name
+    fields:
+      - { name: name, label: Name, widget: string }
+      - name: description
+        label: Description
+        widget: text
+        hint: The authoritative wording of who is in this cohort.
+      - name: minAgeYears
+        label: Minimum age (years)
+        widget: number
+        value_type: int
+        min: 0
+        required: false
+      - name: maxAgeYears
+        label: Maximum age (years)
+        widget: number
+        value_type: int
+        min: 0
+        required: false
+
+  - name: org-types
+    label: Organisation types
+    label_singular: Organisation type
+    folder: data/org-types
+    extension: yaml
+    format: yaml
+    create: true
+    identifier_field: name
+    fields:
+      - { name: name, label: Name, widget: string }
+      - { name: description, label: Description, widget: text, required: false }

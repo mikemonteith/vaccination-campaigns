@@ -1,0 +1,3 @@
+name: Aged 75 and over
+description: Example cohort. People aged 75 or over on the campaign end date.
+minAgeYears: 75

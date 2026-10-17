@@ -1,0 +1,8 @@
+# Releases into main need approval from the code owners of what changed.
+# Replace OWNER with the GitHub organisation and create these teams.
+
+# Maintainers own everything by default: code, schemas, CMS config, workflows.
+*                       @OWNER/campaign-data-maintainers
+
+# Data owners approve data changes.
+/data/                  @OWNER/campaign-data-owners
