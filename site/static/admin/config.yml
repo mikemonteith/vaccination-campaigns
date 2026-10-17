@@ -4,12 +4,12 @@
 # here must match its schema (names, required fields, select options, links);
 # `npm run check:cms` enforces that in CI, so change the schema first.
 #
-# Replace OWNER/REPO and the authenticator URL before first use. See
+# Replace the authenticator URL (base_url) before first use. See
 # site/docs/maintainers/setup.md.
 
 backend:
   name: github
-  repo: OWNER/REPO
+  repo: mikemonteith/vaccination-campaigns
   # Editors' approved changes merge into staging. Releases go staging -> main
   # through a reviewed pull request.
   branch: staging
@@ -24,7 +24,7 @@ publish_mode: editorial_workflow
 media_folder: site/static/uploads
 public_folder: /uploads
 
-site_url: https://OWNER.github.io/REPO/staging/
+site_url: https://mikemonteith.github.io/vaccination-campaigns/staging/
 
 collections:
   - name: campaigns

@@ -71,7 +71,10 @@ export default function DownloadsPage() {
         )}
         <p>
           Each release is also attached to its{" "}
-          <a href="https://github.com/OWNER/REPO/releases">GitHub release</a>.
+          <a href="https://github.com/mikemonteith/vaccination-campaigns/releases">
+            GitHub release
+          </a>
+          .
         </p>
       </main>
     </Layout>

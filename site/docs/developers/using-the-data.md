@@ -10,10 +10,10 @@ title: Using the data
 Every release is published in two places:
 
 - on this site, at fixed URLs:
-  `https://OWNER.github.io/REPO/data/<version>/bundle.json`
+  `https://mikemonteith.github.io/vaccination-campaigns/data/<version>/bundle.json`
   (`latest` always points to the newest release), and
 - as files attached to the
-  [GitHub release](https://github.com/OWNER/REPO/releases).
+  [GitHub release](https://github.com/mikemonteith/vaccination-campaigns/releases).
 
 See the [downloads page](pathname:///data/) for links. Build against a
 specific version, not `latest`, so that your system only changes when you
@@ -56,6 +56,6 @@ removed field).
 ## Source
 
 The source data is YAML in the `data/` folder of the
-[repository](https://github.com/OWNER/REPO). Use the released files rather
+[repository](https://github.com/mikemonteith/vaccination-campaigns). Use the released files rather
 than reading the repository directly: the repository includes changes that
 haven't been released.

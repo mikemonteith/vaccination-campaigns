@@ -1,8 +1,11 @@
 # Releases into main need approval from the code owners of what changed.
-# Replace OWNER with the GitHub organisation and create these teams.
+#
+# This repository is under a personal account, so owners are people. If it
+# moves to an organisation, use teams instead, e.g.
+# @ORG/campaign-data-maintainers for * and @ORG/campaign-data-owners for /data/.
 
 # Maintainers own everything by default: code, schemas, CMS config, workflows.
-*                       @OWNER/campaign-data-maintainers
+*                       @mikemonteith
 
 # Data owners approve data changes.
-/data/                  @OWNER/campaign-data-owners
+/data/                  @mikemonteith

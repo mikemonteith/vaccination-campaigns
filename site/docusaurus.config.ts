@@ -15,7 +15,7 @@ const config: Config = {
   tagline: "The rules for each NHS vaccination campaign, in one place.",
   favicon: "img/favicon.svg",
 
-  url: env.SITE_URL ?? "https://OWNER.github.io",
+  url: env.SITE_URL ?? "https://mikemonteith.github.io",
   baseUrl: env.BASE_URL ?? "/",
   trailingSlash: true,
 

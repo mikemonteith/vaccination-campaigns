@@ -9,14 +9,15 @@ One-off setup for a new copy of this repository.
 
 ## 1. Fill in the placeholders
 
-Search the repository for `OWNER/REPO`, `OWNER` and `EXAMPLE` and replace
-them:
+- `site/static/admin/config.yml`: set `backend.base_url` to your sign-in
+  service (step 4). It's `EXAMPLE` until then.
+- `.github/CODEOWNERS`: the people (or, in an organisation, the teams) who
+  maintain the repository and who approve data changes.
 
-- `site/static/admin/config.yml`: `backend.repo`, `backend.base_url`,
-  `site_url`
-- `site/docusaurus.config.ts`: the default `url`
-- `.github/CODEOWNERS`: the GitHub teams
-- the guides in `site/docs/`
+If the repository moves or is renamed, also update `backend.repo` and
+`site_url` in `site/static/admin/config.yml`, the default `url` in
+`site/docusaurus.config.ts`, and the links in `site/docs/` and
+`site/src/components/DownloadsPage.tsx`.
 
 ## 2. Branches
 
