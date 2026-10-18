@@ -1,0 +1,14 @@
+name: New campaign 2028
+programme: rsv
+status: active
+startDate: 2026-10-18
+endDate: 2026-11-06
+summary: ''
+vaccines:
+  - test
+cohorts:
+  - care-home-residents
+orgTypes:
+  - gp-practice
+  - community-pharmacy
+sources: []
