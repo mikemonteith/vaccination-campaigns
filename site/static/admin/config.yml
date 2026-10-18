@@ -10,21 +10,25 @@
 backend:
   name: github
   repo: mikemonteith/vaccination-campaigns
-  # Editors' approved changes merge into staging. Releases go staging -> main
-  # through a reviewed pull request.
-  branch: staging
+  # Each editor saves to their own branch, edits/<github-username>. The
+  # editor page (index.html) asks who you are and sets the branch when it
+  # starts the CMS, overriding this value. Each editor's changes are
+  # reviewed in their own pull request into main, opened and kept up to
+  # date by the Change request workflow.
+  branch: main
   # Sveltia CMS Authenticator (Cloudflare Worker) for GitHub sign-in.
   base_url: https://sveltia-cms-auth.EXAMPLE.workers.dev
-  squash_merges: true
 
-# Each new or edited entry becomes a pull request into staging, shown to
-# editors as a Draft -> In Review -> Ready board.
-publish_mode: editorial_workflow
+# Saves are committed straight to the editor's branch. Sveltia's editorial
+# workflow is not used: it makes a separate pull request for every entry,
+# but editors change several collections together and want them reviewed
+# together.
+publish_mode: simple
 
 media_folder: site/static/uploads
 public_folder: /uploads
 
-site_url: https://mikemonteith.github.io/vaccination-campaigns/staging/
+site_url: https://mikemonteith.github.io/vaccination-campaigns/
 
 collections:
   - name: campaigns

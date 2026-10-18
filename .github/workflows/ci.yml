@@ -1,18 +1,21 @@
-# Runs on every pull request.
+# Runs on every pull request into main, and on every push to an editor's
+# branch (each save from the CMS). The push run is what checks an editor's
+# change request, because GitHub doesn't run pull request workflows for a pull
+# request that a workflow opened. The Editor branches workflow starts it by
+# hand (workflow_dispatch) after it updates an editor's branch, for the same
+# reason.
 #
-# - Into staging (editor changes from the CMS): data checks are lenient,
-#   because drafts may be incomplete.
-# - Into main (releases): data checks are strict.
-#
-# Either way, it posts a plain-English summary of the data changes on the
-# pull request.
+# On other pull requests, it also posts a plain-English summary of the data
+# changes. Change requests have the summary in their description instead,
+# kept up to date by the Change request workflow.
 name: CI
 
 on:
   pull_request:
-    branches: [main, staging]
+    branches: [main]
   push:
-    branches: [staging]
+    branches: ["edits/**"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -42,18 +45,13 @@ jobs:
         run: npm run check:cms
 
       - name: Validate data
-        run: |
-          if [ "${{ github.base_ref }}" = "main" ]; then
-            npm run validate
-          else
-            npm run validate:lenient
-          fi
+        run: npm run validate
 
       - name: Build
         run: npm run build
 
   summary:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'edits/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -72,12 +70,7 @@ jobs:
 
       - name: Describe changes
         run: |
-          if [ "${{ github.base_ref }}" = "main" ]; then
-            title="Changes in this release"
-          else
-            title="Changes in this pull request"
-          fi
-          npm run -s diff -- --base .base/data --title "$title" > summary.md
+          npm run -s diff -- --base .base/data --title "Changes in this pull request" > summary.md
           cat summary.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment on the pull request
@@ -86,14 +79,7 @@ jobs:
           script: |
             const fs = require("node:fs");
             const marker = "<!-- campaign-data-summary -->";
-            const preview = `https://${context.repo.owner.toLowerCase()}.github.io/${context.repo.repo}/staging/`;
-            const body = [
-              marker,
-              fs.readFileSync("summary.md", "utf8"),
-              context.payload.pull_request.base.ref === "main"
-                ? `Preview the release on the [staging site](${preview}).`
-                : `Once accepted, this will appear on the [staging site](${preview}).`,
-            ].join("\n\n");
+            const body = [marker, fs.readFileSync("summary.md", "utf8")].join("\n\n");
             const { data: comments } = await github.rest.issues.listComments({
               ...context.repo,
               issue_number: context.issue.number,

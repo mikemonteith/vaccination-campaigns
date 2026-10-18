@@ -94,7 +94,7 @@ export function checkCmsConfig(
     }
   }
 
-  problems.push(...checkCmsVersion());
+  problems.push(...checkCmsPage(config?.backend?.repo));
   return problems;
 }
 
@@ -180,15 +180,25 @@ function sveltiaConfigSchema(): object {
   );
 }
 
-/** The CMS page should load the same Sveltia version the config is checked against. */
-function checkCmsVersion(): string[] {
+/**
+ * The CMS page should load the same Sveltia version the config is checked
+ * against, and look up editors' branches in the repository the config uses.
+ */
+function checkCmsPage(repo: string | undefined): string[] {
   const { version } = JSON.parse(
     readFileSync(path.join(SVELTIA_DIR, "package.json"), "utf8"),
   );
   const html = readFileSync(path.join(CMS_DIR, "index.html"), "utf8");
-  return html.includes(`@sveltia/cms@${version}/`)
-    ? []
-    : [
-        `admin/index.html should load @sveltia/cms@${version}, the version in package.json`,
-      ];
+  const problems: string[] = [];
+  if (!html.includes(`@sveltia/cms@${version}/`)) {
+    problems.push(
+      `admin/index.html should load @sveltia/cms@${version}, the version in package.json`,
+    );
+  }
+  if (!html.includes(`const REPO = "${repo}";`)) {
+    problems.push(
+      `admin/index.html should set REPO to "${repo}", the backend.repo in config.yml`,
+    );
+  }
+  return problems;
 }

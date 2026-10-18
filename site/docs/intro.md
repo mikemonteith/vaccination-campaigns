@@ -17,18 +17,19 @@ take a released version of the data and build against it.
 ## How it fits together
 
 1. **Editors** change the data in the [editor](pathname:///admin/). Each
-   change goes through review before it is accepted.
-2. Accepted changes collect in a **staging** area. You can see them in the
-   staging preview site before they are released.
-3. A **release** is reviewed and approved by the data owner. It gets a version
-   number, release notes and downloadable files.
+   editor works in their own workspace.
+2. Each editor's changes are gathered into one **change request**, which
+   the data owner reviews and approves. Approved changes appear on this site
+   straight away.
+3. A maintainer publishes a **release** when it's time: a version number,
+   release notes and downloadable files.
 4. Teams are told about the release and update their systems when they are
    ready.
 
 ## Guides
 
 - [Editing the data](./editors/editing.md)
-- [Reviewing changes](./editors/reviewing.md)
+- [Approving changes](./editors/reviewing.md)
 - [Using the data](./developers/using-the-data.md) (for developers)
 - [Setting up the repository](./maintainers/setup.md) and
   [publishing a release](./maintainers/releasing.md) (for maintainers)

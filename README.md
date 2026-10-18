@@ -4,8 +4,8 @@ The rules for each NHS vaccination campaign (vaccines, SNOMED CT codes,
 eligible cohorts, participating organisation types) as versioned,
 machine-readable data with a human-readable website.
 
-- **Editors** change the data in a web editor ([Sveltia CMS](https://github.com/sveltia/sveltia-cms))
-  with a review step. No Git knowledge needed.
+- **Editors** change the data in a web editor ([Sveltia CMS](https://github.com/sveltia/sveltia-cms)).
+  No Git knowledge needed.
 - **Data owners** approve each release.
 - **Consumers** (systems, developers, people) use versioned JSON files with
   JSON Schemas, or read the website.
@@ -19,14 +19,14 @@ Everything is static and hosted on GitHub Pages. There is no server to run.
 
 ```
  Editor (Sveltia CMS, /admin/)
-   │  each entry change is a pull request into `staging`
-   │  Draft → In Review → Ready → Publish     CI: lenient checks + change summary
+   │  each editor saves to their own branch, edits/<username>
+   │  CI: checks on every save
    ▼
- staging ──────────────► staging preview site (/staging/), "Changes" page
-   │  release pull request staging → main     CI: strict checks + change summary
+ "Changes from <editor>" pull request into main, opened and kept up to
+ date automatically with a plain-English summary of every change
    │  approved by the data owner (CODEOWNERS)
    ▼
- main ─────────────────► released website (/)
+ main ─────────────────► website (/), "Changes" page lists approved changes since the last release
    │  GitHub release vYYYY.N
    ▼
  Release workflow ─────► JSON files attached to the release, and at /data/<version>/
@@ -47,8 +47,7 @@ Everything is static and hosted on GitHub Pages. There is no server to run.
 
 ```sh
 npm ci
-npm run validate            # strict data checks (what a release needs)
-npm run validate:lenient    # draft checks: missing fields/links are warnings
+npm run validate            # data checks: schemas, links, dates
 npm run check:cms           # CMS config matches the schemas and Sveltia's own schema
 npm run diff -- --base <dir> # plain-English summary of changes against another copy of data/
 npm run build:data          # JSON files into dist/data
@@ -68,7 +67,7 @@ Repository**. Sveltia then edits the files in your working copy directly.
 The guides are part of the website, in `site/docs/`:
 
 - [Editing the data](site/docs/editors/editing.md) and
-  [reviewing changes](site/docs/editors/reviewing.md)
+  [approving changes](site/docs/editors/reviewing.md)
 - [Using the data](site/docs/developers/using-the-data.md)
 - [Setting up the repository](site/docs/maintainers/setup.md): do this first
 - [Publishing a release](site/docs/maintainers/releasing.md), including how to

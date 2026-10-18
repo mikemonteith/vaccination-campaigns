@@ -9,7 +9,6 @@
   },
   "scripts": {
     "validate": "tsx scripts/validate.ts",
-    "validate:lenient": "tsx scripts/validate.ts --lenient",
     "check:cms": "tsx scripts/check-cms-config.ts",
     "build:data": "tsx scripts/build-data.ts",
     "diff": "tsx scripts/diff.ts",

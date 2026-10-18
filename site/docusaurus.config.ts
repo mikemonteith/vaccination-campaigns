@@ -5,10 +5,8 @@ import campaignData, {
   type CampaignDataOptions,
 } from "./plugins/campaign-data";
 
-// The deploy workflow builds this site twice: the released site (main) at the
-// root, and a preview of staging under /staging/. These variables say which.
+// Set by the deploy workflow: see .github/workflows/deploy.yml.
 const env = process.env;
-const isStaging = env.SITE_ENV === "staging";
 
 const config: Config = {
   title: "Vaccination campaign data",
@@ -48,33 +46,15 @@ const config: Config = {
   ],
 
   themeConfig: {
-    announcementBar: isStaging
-      ? {
-          id: "staging",
-          content:
-            "This is a <b>preview of unreleased changes</b>. Don't build against it: use the released data instead.",
-          backgroundColor: "#ffeb3b",
-          textColor: "#212b32",
-          isCloseable: false,
-        }
-      : undefined,
     navbar: {
-      title: isStaging ? "Campaign data (preview)" : "Campaign data",
+      title: "Campaign data",
       items: [
         { to: "/campaigns/", label: "Campaigns", position: "left" },
         { to: "/reference/", label: "Reference data", position: "left" },
         { to: "/changes/", label: "Changes", position: "left" },
         { to: "/data/", label: "Download", position: "left" },
         { to: "/docs/", label: "Guides", position: "left" },
-        ...(isStaging
-          ? []
-          : [
-              {
-                href: "pathname:///admin/",
-                label: "Edit data",
-                position: "right" as const,
-              },
-            ]),
+        { href: "pathname:///admin/", label: "Edit data", position: "right" },
       ],
     },
     footer: {

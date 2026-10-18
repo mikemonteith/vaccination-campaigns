@@ -51,8 +51,8 @@ test("select options that differ from the schema enum are reported", () => {
 
 test("options Sveltia doesn't know are reported", () => {
   const broken = config.replace(
-    "publish_mode: editorial_workflow",
-    "publish_mode: editorial_workflow\nnot_an_option: true",
+    "publish_mode: simple",
+    "publish_mode: simple\nnot_an_option: true",
   );
   expect(checkCmsConfig(broken).join("\n")).toContain('"not_an_option"');
 });

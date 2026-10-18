@@ -1,0 +1,89 @@
+# Each editor saves to their own branch, edits/<github-username>. While that
+# branch has data changes that main doesn't, this keeps one "Changes from
+# <editor>" pull request into main open, with a plain-English summary of all
+# of them in its description. CODEOWNERS means GitHub asks the data owner to
+# review it when it's opened.
+#
+# Needs Settings -> Actions -> General -> "Allow GitHub Actions to create and
+# approve pull requests".
+name: Change request
+
+on:
+  push:
+    branches: ["edits/**"]
+  # Started by the Editor branches workflow after it updates a branch.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: change-request-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  change-request:
+    if: startsWith(github.ref_name, 'edits/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: .base
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Describe changes
+        run: |
+          npm run -s diff -- --base .base/data --title "Changes" > summary.md
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or update the change request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("node:fs");
+            const branch = context.ref.replace("refs/heads/", "");
+            const editor = branch.slice("edits/".length);
+            const summary = fs.readFileSync("summary.md", "utf8");
+            const hasChanges = !summary.includes("No data changes.");
+            const body = [
+              `Changes saved by @${editor} in the editor, waiting for approval. ` +
+                "Approving and merging this pull request accepts them.",
+              summary,
+              "**To approve:** choose **Files changed**, then **Review changes**, " +
+                "**Approve** and **Submit review**. The editor can keep making " +
+                "changes until it's merged; this description updates after each one.",
+            ].join("\n\n");
+
+            const { data: open } = await github.rest.pulls.list({
+              ...context.repo,
+              state: "open",
+              base: "main",
+              head: `${context.repo.owner}:${branch}`,
+            });
+
+            if (open.length > 0) {
+              await github.rest.pulls.update({
+                ...context.repo,
+                pull_number: open[0].number,
+                body,
+              });
+              core.notice(`Updated change request #${open[0].number}`);
+            } else if (hasChanges) {
+              const { data: pr } = await github.rest.pulls.create({
+                ...context.repo,
+                base: "main",
+                head: branch,
+                title: `Changes from ${editor}`,
+                body,
+              });
+              core.notice(`Opened change request #${pr.number}`);
+            } else {
+              core.notice("No data changes on this branch, so no change request");
+            }

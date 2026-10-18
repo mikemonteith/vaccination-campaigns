@@ -1,0 +1,104 @@
+# Manages editors' branches, edits/<github-username>.
+#
+# - Run it by hand (Actions -> Editor branches -> Run workflow) with a GitHub
+#   username to give a new editor their branch.
+# - After every change to main (an approved change request, or a code
+#   change), it brings every editor's branch up to date with main, so each
+#   editor keeps working on the latest approved data. A branch whose changes
+#   have all been accepted is moved to main, ready for the next set.
+#
+# Pushes made here don't start other workflows by themselves, so it starts
+# CI and Change request for each branch it updates.
+name: Editor branches
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      editor:
+        description: GitHub username of the new editor
+        required: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: editor-branches
+  cancel-in-progress: false
+
+jobs:
+  editor-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          NEW_EDITOR: ${{ inputs.editor }}
+        with:
+          script: |
+            const repo = context.repo;
+            const { data: main } = await github.rest.repos.getBranch({ ...repo, branch: "main" });
+            const mainSha = main.commit.sha;
+
+            const newEditor = (process.env.NEW_EDITOR || "").trim().toLowerCase();
+            if (newEditor) {
+              if (!/^[a-z0-9-]+$/.test(newEditor)) {
+                core.setFailed(`"${newEditor}" isn't a GitHub username`);
+                return;
+              }
+              try {
+                await github.rest.git.createRef({
+                  ...repo,
+                  ref: `refs/heads/edits/${newEditor}`,
+                  sha: mainSha,
+                });
+                core.notice(`Created edits/${newEditor}`);
+              } catch (e) {
+                if (e.status !== 422) throw e;
+                core.notice(`edits/${newEditor} already exists`);
+              }
+              return;
+            }
+
+            const { data: refs } = await github.rest.git.listMatchingRefs({
+              ...repo,
+              ref: "heads/edits/",
+            });
+
+            for (const { ref } of refs) {
+              const branch = ref.replace("refs/heads/", "");
+              const { data: cmp } = await github.rest.repos.compareCommitsWithBasehead({
+                ...repo,
+                basehead: `main...${branch}`,
+              });
+              if (cmp.behind_by === 0) continue;
+
+              try {
+                if (cmp.ahead_by === 0) {
+                  // Everything on the branch is already in main.
+                  await github.rest.git.updateRef({ ...repo, ref: `heads/${branch}`, sha: mainSha });
+                  core.notice(`${branch}: moved to main`);
+                  continue;
+                }
+                await github.rest.repos.merge({
+                  ...repo,
+                  base: branch,
+                  head: mainSha,
+                  commit_message: "Bring in approved changes from main",
+                });
+                core.notice(`${branch}: merged main into it`);
+              } catch (e) {
+                // 409: the same entry changed on both sides. 403/422: main
+                // changed a workflow file, which this token may not push.
+                core.warning(
+                  `${branch}: couldn't bring it up to date with main (${e.status}: ${e.message}). ` +
+                    "A maintainer needs to merge main into it.",
+                );
+                continue;
+              }
+
+              for (const workflow_id of ["ci.yml", "change-request.yml"]) {
+                await github.rest.actions.createWorkflowDispatch({ ...repo, workflow_id, ref: branch });
+              }
+            }
