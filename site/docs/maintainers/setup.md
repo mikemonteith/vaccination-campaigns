@@ -21,20 +21,20 @@ If the repository moves or is renamed, also update `backend.repo` and
 
 ## 2. Branches
 
-- Create a `staging` branch from `main`. The editor writes to `staging`.
 - Protect **`main`** (Settings → Rules → Rulesets):
   - require a pull request before merging, with **1 approval**, and
     **review from Code Owners**,
-  - require the **CI / checks** status check to pass,
+  - require the **checks** status check to pass,
   - block force pushes and deletion.
-- Protect **`staging`** lightly: block force pushes and deletion, but **don't
-  require pull request reviews**. The editor publishes by merging its own pull
-  requests into `staging`, and a required review would stop it.
+- **Don't protect editors' branches** (`edits/*`). The editor saves by
+  committing straight to them, and the Editor branches workflow updates them.
+- Allow the workflows to open pull requests: Settings → Actions → General →
+  **Allow GitHub Actions to create and approve pull requests**.
 
 ## 3. GitHub Pages
 
 Settings → Pages → Source: **GitHub Actions**. The `Deploy site` workflow
-publishes the released site at the root, the staging preview at `/staging/`
+publishes the site (built from `main`) at the root, the editor at `/admin/`
 and every release's data files under `/data/`.
 
 ## 4. Sign-in for the editor
@@ -54,8 +54,11 @@ free Cloudflare Worker:
 
 ## 5. People
 
-- **Editors** need write access to the repository.
-- **Data owners** (who approve releases) go in the team named in
-  `.github/CODEOWNERS` for `/data/`.
-- **Maintainers** (who change schemas and publish releases) go in the team
-  named for `/schema/` and the rest of the repository.
+- **Editors** need write access to the repository (Settings →
+  Collaborators) and a workspace: run **Actions → Editor branches → Run
+  workflow** with their GitHub username. That creates their branch,
+  `edits/<username>`.
+- **Data owners** (who approve change requests) are the code owners of
+  `/data/` in `.github/CODEOWNERS`.
+- **Maintainers** (who change schemas and publish releases) are the code
+  owners of everything else.

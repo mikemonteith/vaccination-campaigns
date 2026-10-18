@@ -5,8 +5,185 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title>Vaccination campaign data editor</title>
+    <style>
+      :root {
+        --fg: #212b32;
+        --muted: #4c6272;
+        --bg: #f0f4f5;
+        --card: #ffffff;
+        --accent: #005eb8;
+        --border: #d8dde0;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #f0f4f5;
+          --muted: #aeb7bd;
+          --bg: #1b1f23;
+          --card: #262b30;
+          --accent: #41b6e6;
+          --border: #3a4147;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+      }
+      #picker {
+        max-width: 32rem;
+        margin: 3rem auto;
+        padding: 0 16px;
+      }
+      #picker h1 {
+        font-size: 1.6rem;
+      }
+      #editors {
+        list-style: none;
+        padding: 0;
+      }
+      #editors button,
+      #other button {
+        font: inherit;
+        cursor: pointer;
+        border-radius: 6px;
+      }
+      #editors button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        background: var(--card);
+        color: var(--fg);
+        border: 1px solid var(--border);
+      }
+      #editors button:hover,
+      #editors button:focus-visible {
+        border-color: var(--accent);
+      }
+      #other input {
+        font: inherit;
+        padding: 0.4rem;
+        margin: 0.25rem 0.5rem 0.25rem 0;
+      }
+      #other button {
+        padding: 0.4rem 1rem;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+      }
+      .hint,
+      #message {
+        color: var(--muted);
+      }
+    </style>
+    <!-- Start the CMS from the script below, once we know whose branch to use. -->
+    <script>
+      window.CMS_MANUAL_INIT = true;
+    </script>
     <!-- Keep this version in step with @sveltia/cms in package.json (checked by npm run check:cms). -->
     <script src="https://unpkg.com/@sveltia/cms@0.246.1/dist/sveltia-cms.js"></script>
   </head>
-  <body></body>
+  <body>
+    <main id="picker" hidden>
+      <h1>Edit vaccination campaign data</h1>
+      <p>
+        You make your changes in your own workspace. When you've finished, the
+        data owner reviews them all together.
+      </p>
+      <h2>Who are you?</h2>
+      <ul id="editors"></ul>
+      <form id="other">
+        <label>
+          Your GitHub username
+          <input name="login" required pattern="[A-Za-z0-9\-]+" />
+        </label>
+        <button>Continue</button>
+      </form>
+      <p id="message" role="status"></p>
+      <p class="hint">Not listed? Ask a maintainer to add you as an editor.</p>
+    </main>
+    <script>
+      // Must match backend.repo in config.yml (checked by npm run check:cms).
+      const REPO = "mikemonteith/vaccination-campaigns";
+      const PREFIX = "edits/";
+      const STORAGE_KEY = "campaign-data-editor";
+
+      const params = new URLSearchParams(location.search);
+      const remember = (login) => {
+        try {
+          localStorage.setItem(STORAGE_KEY, login);
+        } catch {}
+      };
+      const remembered = () => {
+        try {
+          return localStorage.getItem(STORAGE_KEY);
+        } catch {
+          return null;
+        }
+      };
+
+      // ?editor=<login> picks a workspace, ?switch shows the list again,
+      // otherwise use the one chosen last time on this device.
+      const editor = params.has("switch")
+        ? null
+        : params.get("editor") || remembered();
+
+      if (editor) {
+        remember(editor);
+        document.getElementById("picker").remove();
+        CMS.init({ config: { backend: { branch: PREFIX + editor } } });
+      } else {
+        showPicker();
+      }
+
+      async function showPicker() {
+        const picker = document.getElementById("picker");
+        const list = document.getElementById("editors");
+        const message = document.getElementById("message");
+        picker.hidden = false;
+
+        const choose = (login) => {
+          remember(login);
+          location.search = `?editor=${encodeURIComponent(login)}`;
+        };
+
+        // Only works for a public repository; otherwise people type their
+        // username instead.
+        let known = null;
+        try {
+          const res = await fetch(
+            `https://api.github.com/repos/${REPO}/git/matching-refs/heads/${PREFIX}`,
+          );
+          if (res.ok) {
+            known = (await res.json()).map((ref) =>
+              ref.ref.slice(`refs/heads/${PREFIX}`.length),
+            );
+          }
+        } catch {}
+
+        for (const login of known ?? []) {
+          const item = document.createElement("li");
+          const button = document.createElement("button");
+          button.textContent = login;
+          button.addEventListener("click", () => choose(login));
+          item.append(button);
+          list.append(item);
+        }
+
+        document.getElementById("other").addEventListener("submit", (e) => {
+          e.preventDefault();
+          const login = new FormData(e.target).get("login").toLowerCase();
+          if (known && !known.includes(login)) {
+            message.textContent = `There's no workspace for ${login} yet. Ask a maintainer to add you as an editor.`;
+            return;
+          }
+          choose(login);
+        });
+      }
+    </script>
+  </body>
 </html>

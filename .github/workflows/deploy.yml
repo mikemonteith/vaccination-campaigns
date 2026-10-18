@@ -1,14 +1,16 @@
 # Publishes GitHub Pages:
 #
-#   /              the released site, built from main
+#   /              the site, built from main: every approved change
 #   /admin/        the editor (Sveltia CMS)
-#   /staging/      a preview of staging: accepted changes waiting for release
 #   /data/<tag>/   the data files of every release, and /data/latest/
+#
+# Main can hold approved changes that haven't been released yet. The site's
+# Changes page lists them, and its version label says so.
 name: Deploy site
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
   workflow_run:
     workflows: [Release]
     types: [completed]
@@ -51,43 +53,26 @@ jobs:
           echo "latest=$latest" >> "$GITHUB_OUTPUT"
           cat "$RUNNER_TEMP/versions.json"
 
-      - name: Build released site (main)
+      - name: Build site (main)
         env:
           BASE_URL: /${{ env.REPO_NAME }}/
-          SITE_ENV: production
           VERSIONS_JSON: ${{ runner.temp }}/versions.json
           CHANGES_JSON: ${{ runner.temp }}/changes-main.json
           LATEST: ${{ steps.releases.outputs.latest }}
         run: |
-          # Changes on main since the latest release (usually none).
+          # Approved changes on main since the latest release.
+          version="unreleased"
           if [ -n "$LATEST" ]; then
+            version="$LATEST"
             git worktree add "$RUNNER_TEMP/latest" "$LATEST"
             npm run -s diff -- --base "$RUNNER_TEMP/latest/data" \
-              --title "Changes since $LATEST" --json "$CHANGES_JSON" > /dev/null
+              --title "Approved changes since $LATEST" --json "$CHANGES_JSON" > /dev/null
+            if jq -e '.changes | length > 0' "$CHANGES_JSON" > /dev/null; then
+              version="$LATEST plus approved changes"
+            fi
           fi
-          DATA_VERSION="${LATEST:-unreleased}" npm run build:data -- --version "${LATEST:-unreleased}"
-          DATA_VERSION="${LATEST:-unreleased}" npm run site:build
-
-      - name: Build staging preview
-        env:
-          BASE_URL: /${{ env.REPO_NAME }}/staging/
-          SITE_ENV: staging
-          DATA_VERSION: unreleased (staging)
-          CHANGES_JSON: ${{ runner.temp }}/changes-staging.json
-        run: |
-          if ! git ls-remote --exit-code --heads origin staging > /dev/null; then
-            echo "::warning::No staging branch yet, so no staging preview"
-            exit 0
-          fi
-          git fetch origin staging
-          git worktree add "$RUNNER_TEMP/staging" origin/staging
-          cd "$RUNNER_TEMP/staging"
-          npm ci
-          # Changes waiting for the next release: staging compared with main.
-          npm run -s diff -- --base "$GITHUB_WORKSPACE/data" \
-            --title "Changes waiting for the next release" --json "$CHANGES_JSON" > /dev/null
-          npm run build:data -- --version "unreleased"
-          npx docusaurus build site --out-dir "$GITHUB_WORKSPACE/build/staging"
+          npm run build:data -- --version "$version"
+          DATA_VERSION="$version" npm run site:build
 
       - name: Add release data files
         run: |
